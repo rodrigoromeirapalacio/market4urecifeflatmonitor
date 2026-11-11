@@ -1,0 +1,13 @@
+{
+  "engine": 1,
+  "seconds": 5,
+  "reload_hours": 6,
+  "slides": [
+    { "type": "step", "text": "Coloque o CPF\nna maquininha" },
+    { "type": "step", "text": "Passe o código de barras\ndo produto no leitor" },
+    { "type": "step", "text": "Clique em\nFinalizar" },
+    { "type": "step", "text": "Escolha a opção\nde pagamento" },
+    { "type": "step", "text": "Aguarde a\nconfirmação" },
+    { "type": "offer", "image": "assets/powerade.png", "from": "R$7,49", "to": "R$6,49", "footer": "preço pelo App Market4u" }
+  ]
+}

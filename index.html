@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Mercadinho – Como comprar</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<style>
+html, body { height: 100%; margin: 0; background: #000; color: #fff; font-family: Arial, Helvetica, sans-serif; overflow: hidden; }
+#stage { position: relative; width: 100%; height: 100%; }
+.slide { position: absolute; top: 0; left: 0; width: 100%; height: 100%; text-align: center; opacity: 0; -webkit-transition: opacity 0.6s; transition: opacity 0.6s; }
+.slide.on { opacity: 1; }
+.inner { position: absolute; top: 50%; left: 6%; right: 6%; -webkit-transform: translateY(-50%); transform: translateY(-50%); }
+.num { display: inline-block; width: 18vh; height: 18vh; line-height: 18vh; border: 1.2vh solid #fff; border-radius: 50%; font-size: 11vh; font-weight: bold; margin-bottom: 5vh; }
+.txt { font-size: 9vh; font-weight: bold; line-height: 1.15; margin: 0; }
+.count { position: absolute; top: 3vh; left: 0; right: 0; font-size: 3.4vh; letter-spacing: 0.1vh; }
+.dots { position: absolute; bottom: 4vh; left: 0; right: 0; text-align: center; }
+.dot { display: inline-block; width: 2.4vh; height: 2.4vh; margin: 0 1.2vh; border: 0.4vh solid #fff; border-radius: 50%; background: #000; }
+.dot.on { background: #fff; }
+.light .dot { border-color: #111; background: #fff; }
+.light .dot.on { background: #111; }
+.full .dots { display: none; }
+
+/* tela de oferta (fundo branco) */
+.ofe { background: #fff; color: #111; overflow: hidden; }
+.blob { position: absolute; border-radius: 20vh; }
+.b1 { left: -16vh; top: 8vh; width: 36vh; height: 12vh; background: #f9958c; -webkit-transform: rotate(38deg); transform: rotate(38deg); }
+.b2 { left: -16vh; top: 42vh; width: 36vh; height: 12vh; background: #f9958c; -webkit-transform: rotate(38deg); transform: rotate(38deg); }
+.b3 { right: -22vh; top: 24vh; width: 38vh; height: 13vh; background: #76b82a; -webkit-transform: rotate(-52deg); transform: rotate(-52deg); }
+.b4 { right: -26vh; top: 62vh; width: 40vh; height: 13vh; background: #76b82a; -webkit-transform: rotate(38deg); transform: rotate(38deg); }
+.b5 { right: -10vh; bottom: -8vh; width: 28vh; height: 12vh; background: #76b82a; -webkit-transform: rotate(-30deg); transform: rotate(-30deg); }
+.ofe-title { position: absolute; top: 4vh; left: 0; right: 0; font-size: 9.5vh; font-weight: bold; line-height: 1; margin: 0; letter-spacing: -0.2vh; color: #111; }
+.g { color: #76b82a; }
+.ofe-pill { position: absolute; top: 17vh; left: 50%; margin-left: -19vh; width: 38vh; height: 8.6vh; line-height: 8.6vh; border-radius: 4.3vh; background: #f9958c; color: #fff; font-size: 5.4vh; font-weight: bold; }
+.ofe-img { position: absolute; top: 29vh; left: 50%; height: 50vh; width: auto; -webkit-transform: translateX(-50%); transform: translateX(-50%); }
+.ofe-left { position: absolute; top: 47vh; left: 12vw; width: 24vw; text-align: center; }
+.ofe-right { position: absolute; top: 43vh; right: 12vw; width: 24vw; text-align: center; }
+.ofe-lab { font-size: 5vh; font-weight: bold; color: #111; margin: 0 0 1vh 0; }
+.ofe-old { position: relative; display: inline-block; font-size: 9vh; font-weight: bold; color: #555; line-height: 1.1; }
+.ofe-old:after { content: ""; position: absolute; left: -3%; right: -3%; top: 50%; height: 1vh; margin-top: -0.5vh; background: #e0453a; -webkit-transform: rotate(-7deg); transform: rotate(-7deg); }
+.ofe-new { font-size: 12.5vh; font-weight: bold; color: #76b82a; line-height: 1.05; margin: 0; }
+.ofe-app { position: absolute; bottom: 9vh; left: 0; right: 0; font-size: 4.6vh; font-weight: bold; color: #111; }
+
+/* tela só com imagem */
+.imgslide img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain; }
+</style>
+</head>
+<body>
+<div id="stage"><div class="dots" id="dots"></div></div>
+<script>
+(function () {
+  // Esta página busca slides.json de tempos em tempos e se redesenha sozinha.
+  // Para mudar o conteúdo, basta alterar o slides.json (não precisa recarregar a TV box).
+  var ENGINE = 1;
+  var stage = document.getElementById('stage');
+  var dotsBox = document.getElementById('dots');
+  var slides = [], dots = [], kinds = [], secs = [];
+  var cur = 0, timer = null, lastText = '', cfg = null;
+  var needReload = false, loadedAt = new Date().getTime();
+  var pollMs = 60 * 1000;
+  var m = /[?&]poll=(\d+)/.exec(location.search);
+  if (m) { pollMs = parseInt(m[1], 10) * 1000; }
+
+  function el(tag, cls, text) {
+    var e = document.createElement(tag);
+    if (cls) { e.className = cls; }
+    if (text !== undefined && text !== null) { e.appendChild(document.createTextNode(String(text))); }
+    return e;
+  }
+  function lines(parent, text) {
+    var parts = String(text).split('\n');
+    for (var i = 0; i < parts.length; i++) {
+      if (i) { parent.appendChild(document.createElement('br')); }
+      parent.appendChild(document.createTextNode(parts[i]));
+    }
+  }
+  function safeSrc(p) { return (typeof p === 'string' && /^[A-Za-z0-9_.\/-]+$/.test(p) && p.indexOf('..') < 0) ? p : ''; }
+  function withGreen(parent, text, word) {
+    var s = String(text), i = s.indexOf(word);
+    if (i < 0) { parent.appendChild(document.createTextNode(s)); return; }
+    parent.appendChild(document.createTextNode(s.slice(0, i)));
+    parent.appendChild(el('span', 'g', word));
+    parent.appendChild(document.createTextNode(s.slice(i + word.length)));
+  }
+
+  function buildSlide(s, n, total) {
+    var d = el('div', 'slide');
+    if (s.type === 'step') {
+      d.appendChild(el('div', 'count', 'Passo ' + n + ' de ' + total));
+      var inner = el('div', 'inner');
+      inner.appendChild(el('div', 'num', n));
+      var p = el('p', 'txt'); lines(p, s.text || ''); inner.appendChild(p);
+      d.appendChild(inner);
+      return { node: d, kind: 'step' };
+    }
+    if (s.type === 'offer') {
+      d.className = 'slide ofe';
+      for (var b = 1; b <= 5; b++) { d.appendChild(el('div', 'blob b' + b)); }
+      var t = el('p', 'ofe-title', (s.title1 || 'PRODUTOS') + ' ');
+      t.appendChild(el('span', 'g', s.title2 || 'EM PROMOÇÃO!'));
+      d.appendChild(t);
+      d.appendChild(el('div', 'ofe-pill', s.pill || 'APROVEITE!'));
+      var src = safeSrc(s.image);
+      if (src) { var im = el('img', 'ofe-img'); im.src = src; im.alt = ''; d.appendChild(im); }
+      var l = el('div', 'ofe-left'); l.appendChild(el('p', 'ofe-lab', 'de')); l.appendChild(el('span', 'ofe-old', s.from || '')); d.appendChild(l);
+      var r = el('div', 'ofe-right'); r.appendChild(el('p', 'ofe-lab', 'por')); r.appendChild(el('p', 'ofe-new', s.to || '')); d.appendChild(r);
+      var f = el('div', 'ofe-app'); withGreen(f, s.footer || '', 'Market4u'); d.appendChild(f);
+      return { node: d, kind: 'offer' };
+    }
+    if (s.type === 'image') {
+      d.className = 'slide imgslide';
+      d.style.background = (/^#[0-9a-fA-F]{3,6}$/.test(s.bg || '')) ? s.bg : '#fff';
+      var src2 = safeSrc(s.image);
+      if (src2) { var im2 = el('img'); im2.src = src2; im2.alt = ''; d.appendChild(im2); }
+      return { node: d, kind: 'image' };
+    }
+    return null;
+  }
+
+  function apply(c) {
+    if (timer) { clearTimeout(timer); timer = null; }
+    for (var i = slides.length - 1; i >= 0; i--) { stage.removeChild(slides[i]); }
+    dotsBox.innerHTML = '';
+    slides = []; dots = []; kinds = []; secs = [];
+    var list = c.slides || [], total = 0, n = 0, k;
+    for (k = 0; k < list.length; k++) { if (list[k].type === 'step') { total++; } }
+    for (k = 0; k < list.length; k++) {
+      if (list[k].type === 'step') { n++; }
+      var b = buildSlide(list[k], n, total);
+      if (!b) { continue; }
+      stage.insertBefore(b.node, dotsBox);
+      slides.push(b.node); kinds.push(b.kind); secs.push(list[k].seconds || c.seconds || 5);
+      var dt = el('span', 'dot'); dotsBox.appendChild(dt); dots.push(dt);
+    }
+    cfg = c; cur = 0;
+    if (slides.length) { show(0); }
+  }
+
+  function show(i) {
+    for (var k = 0; k < slides.length; k++) {
+      if (k === i) { slides[k].classList.add('on'); dots[k].classList.add('on'); }
+      else { slides[k].classList.remove('on'); dots[k].classList.remove('on'); }
+    }
+    document.body.className = kinds[i] === 'offer' ? 'light' : (kinds[i] === 'image' ? 'full' : '');
+    timer = setTimeout(next, secs[i] * 1000);
+  }
+  function next() {
+    var hours = (cfg && cfg.reload_hours) || 6;
+    var old = (new Date().getTime() - loadedAt) > hours * 3600 * 1000;
+    var i = (cur + 1) % slides.length;
+    if (i === 0 && (needReload || old)) { location.reload(); return; }
+    cur = i; show(cur);
+  }
+
+  function accept(text, fromCache) {
+    var c;
+    try { c = JSON.parse(text); } catch (e) { return false; }
+    if (!c || !c.slides || !c.slides.length) { return false; }
+    if (c.engine && c.engine !== ENGINE) { needReload = true; if (!fromCache) { return false; } }
+    lastText = text; apply(c);
+    return true;
+  }
+  function poll() {
+    try {
+      var x = new XMLHttpRequest();
+      x.open('GET', 'slides.json?t=' + new Date().getTime(), true);
+      x.setRequestHeader('Cache-Control', 'no-cache');
+      x.onreadystatechange = function () {
+        if (x.readyState !== 4 || x.status !== 200) { return; }
+        if (x.responseText === lastText) { return; }
+        if (accept(x.responseText, false)) {
+          try { localStorage.setItem('slides_cache', x.responseText); } catch (e) {}
+        }
+      };
+      x.send();
+    } catch (e) {}
+  }
+
+  try { var cached = localStorage.getItem('slides_cache'); if (cached) { accept(cached, true); } } catch (e) {}
+  poll();
+  setInterval(poll, pollMs);
+  document.body.onclick = function () {
+    try { var d = document.documentElement; var f = d.requestFullscreen || d.webkitRequestFullscreen; if (f) { f.call(d); } } catch (e) {}
+  };
+})();
+</script>
+</body>
+</html>
