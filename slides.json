@@ -29,6 +29,16 @@
       "from": "R$7,49",
       "to": "R$6,49",
       "footer": "preço pelo App Market4u"
+    },
+    {
+      "type": "image",
+      "image": "assets/amstel.jpg",
+      "bg": "#ffffff"
+    },
+    {
+      "type": "image",
+      "image": "assets/blackfriday-chocolates.jpg",
+      "bg": "#ffffff"
     }
   ]
 }
