@@ -44,11 +44,6 @@
    "type": "image",
    "image": "assets/oferta-3.png",
    "bg": "#ffffff"
-  },
-  {
-   "type": "image",
-   "image": "assets/oferta-4.png",
-   "bg": "#ffffff"
   }
  ]
 }
