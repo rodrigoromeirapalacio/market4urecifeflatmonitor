@@ -24,13 +24,6 @@
    "text": "Aguarde a\nconfirmação"
   },
   {
-   "type": "offer",
-   "image": "assets/powerade.png",
-   "from": "R$7,49",
-   "to": "R$6,49",
-   "footer": "preço pelo App Market4u"
-  },
-  {
    "type": "image",
    "image": "assets/oferta-1.png",
    "bg": "#ffffff"
@@ -43,6 +36,11 @@
   {
    "type": "image",
    "image": "assets/oferta-3.png",
+   "bg": "#ffffff"
+  },
+  {
+   "type": "image",
+   "image": "assets/oferta-4.png",
    "bg": "#ffffff"
   }
  ]
